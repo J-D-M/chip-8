@@ -10,9 +10,15 @@ namespace chip8
  * 0x200-0xFFF - Program ROM and work RAM
  */
 
-uint8_t memory[0x100];
-uint8_t v[0x10]; /* register */
+uint8_t memory[0x100]; /* main memory */
+uint8_t v[0xF];        /* V registers   */
+
+uint16_t index_register;  /* I */
+uint16_t program_counter; /* pc */
+
 uint8_t gfx[0x20][0x40];
+
 uint8_t delay_timer;
 uint8_t sound_timer;
+
 }  // namespace chip8
