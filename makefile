@@ -1,13 +1,14 @@
-TARGET := out
+TARGET := chip8
 
 CC := g++
 
-FLAGS ?= -Wall
+FLAGS  := -Wall -Wextra -pedantic-erros
+LFLAGS :=
 
-SRCDIR ?= ./src
-BINDIR ?= ./bin
+SRCDIR := ./src
+BINDIR := ./bin
 
-OBJS ?= $(SRCDIR)/*.cpp
+OBJS := $(SRCDIR)/*.cpp
 
 default: $(OBJS)
 	$(CC) $^ $(FLAGS) -o $(BINDIR)/$(TARGET)
