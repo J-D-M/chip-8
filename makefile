@@ -1,15 +1,22 @@
-TARGET := chip8
+CC       = clang++
+CFLAGS   = -Wall -Wextra -pedantic-errors -std=c++17
+LFLAGS   = -lsfml-system -lsfml-window -lsfml-graphics
 
-CC := g++
+SRCDIR   = ./src
+BINDIR   = ./bin
+OBJDIR   = ./obj
 
-FLAGS  := -Wall -Wextra -pedantic-erros
-LFLAGS :=
+SRCFILES = $(wildcard $(SRCDIR)/*.cpp)
+OBJS     = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRCFILES))
 
-SRCDIR := ./src
-BINDIR := ./bin
-
-OBJS := $(SRCDIR)/*.cpp
+ONAME    = 'chip8'
 
 default: $(OBJS)
-	$(CC) $^ $(FLAGS) -o $(BINDIR)/$(TARGET)
+	$(CC) $(CFLAGS) $(LFLAGS) $^ -o $(BINDIR)/$(ONAME)
 
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+clean:
+	rm $(OBJDIR)/*.o
