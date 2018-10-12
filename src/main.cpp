@@ -7,18 +7,25 @@
 #include <vector>
 
 #include "./chip8.hpp"
-#include "./pixel.hpp"
 
-constexpr unsigned scale{ 20 };
+constexpr unsigned scale{ 10 };
 constexpr unsigned width{ 64 };
 constexpr unsigned height{ 32 };
 
-auto
-draw_screen(std::array< std::array< bool, 64 >, 32 > grid,
-            sf::RenderWindow &win) -> void
+class pixel : public sf::RectangleShape
 {
-	static auto pix{ chip8::pixel(scale) };
+       public:
+	pixel(unsigned len) : sf::RectangleShape(sf::Vector2f(len, len))
+	{
+		setFillColor(sf::Color(255, 255, 255));
+	}
+};
 
+auto
+draw_screen(std::vector< std::vector< bool > > grid, sf::RenderWindow &win)
+    -> void
+{
+	auto pix{ pixel(scale) };
 	auto draw_cell = [&](auto y, auto x) {
 		if (grid[y][x]) {
 			pix.setPosition(x * scale, y * scale);
@@ -33,19 +40,29 @@ draw_screen(std::array< std::array< bool, 64 >, 32 > grid,
 	}
 }
 
+// std::vector< std::vector< bool > > dumy(32, std::vector< bool >(64));
+
 auto
 main(int argc, char **argv) -> int
 {
 	using namespace chip8;
+	using namespace std::literals::chrono_literals;
+	//	auto lel = false;
+	//	for (auto &row : dumy) {
+	//		for (size_t i{ 0 }; i < dumy[0].size(); i++) {
+	//			row[i] = lel;
+	//			lel ^= 1;
+	//		}
+	//	}
 	if (argc < 2) {
 		std::cout << "No file path\n";
 	}
-	//	using namespace std::literals::chrono_literals;
 
 	auto win{ sf::RenderWindow(sf::VideoMode(width * scale, height * scale),
 		                   "chip-8") };
 	win.setFramerateLimit(60);
 	auto event{ sf::Event{} };
+
 	auto emu{ emulator{} };
 
 	if (!emu.load(argv[1])) {
@@ -61,8 +78,11 @@ main(int argc, char **argv) -> int
 
 		emu.cycle();
 		win.clear();
-		draw_screen(emu.get_gfx() /* test_grid*/, win);
+
+		// draw_screen(dumy, win);
+		draw_screen(emu.get_gfx(), win);
+
 		win.display();
-		//		std::this_thread::sleep_for(2ms);
+//		std::this_thread::sleep_for(1ms);
 	}
 }

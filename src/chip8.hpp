@@ -1,9 +1,9 @@
 #pragma once
 
-#include <array>
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
+#include <string>
 #include <vector>
 
 namespace chip8
@@ -11,14 +11,15 @@ namespace chip8
 class emulator
 {
        private:
-	std::array< uint8_t, 0x1000 > memory;  // main mem
-	std::array< uint8_t, 0x10 > v;         // registers
-	std::array< uint16_t, 0x10 > stack;    // call stack
-	std::array< std::array< bool, 64 >, 32 > gfx;
+	std::vector< uint8_t > memory;  // main mem
+	std::vector< uint8_t > v;       // registers
+	std::vector< uint16_t > stack;  // call stack
 
-	uint16_t op_code;          // opcode storage
+	std::vector< std::vector< bool > > gfx;
+
+	uint16_t op_code;
 	uint16_t index_register;   // I
-	uint16_t program_counter;  // pc current address
+	uint16_t program_counter;  // pc
 
 	uint8_t stack_pointer;
 	uint8_t delay_timer;
@@ -28,16 +29,21 @@ class emulator
 	auto op0x0(uint16_t) -> void;
 	auto op0x8(uint16_t) -> void;
 	auto op0xF(uint16_t) -> void;
+	auto op0xE(uint16_t) -> void;
 
 	// functions that change the gfx buffer
 	auto clear_screen() -> void;
-	auto draw(size_t, size_t, size_t) -> void;
+	auto draw(uint8_t, uint8_t, uint8_t) -> void;
+
+	bool halt_flag;
 
        public:
 	emulator();
-
+	// load game
 	auto load(const std::string_view&) -> bool;
+	// opcode cycle
 	auto cycle() -> void;
-	auto get_gfx() -> std::array< std::array< bool, 64 >, 32 >;
+	// return graphics buffer
+	auto get_gfx() -> std::vector< std::vector< bool > >;
 };
 }  // namespace chip8
