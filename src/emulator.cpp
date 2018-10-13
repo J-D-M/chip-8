@@ -23,18 +23,19 @@ constexpr unsigned char fontset[80] = {
 	0xF0, 0x80, 0xF0, 0x80, 0x80,  // F
 };
 
-emulator::emulator(gfx &g, keypad &k) :
-    memory{ 0 },
-    v{ 0 },
-    stack{ 0 },
-    i_register{ 0 },
-    pc{ 0x200 },
-    sp{ 0 },
-    d_timer{ 0 },
-    s_timer{ 0 },
-    gfx_buf{ g },
-    k_pad{ k }
+emulator::emulator(gfx &g, keypad &k)
+    : memory{ 0 },
+      v{ 0 },
+      stack{ 0 },
+      i_register{ 0 },
+      pc{ 0x200 },
+      sp{ 0 },
+      d_timer{ 0 },
+      s_timer{ 0 },
+      gfx_buf{ g },
+      k_pad{ k }
 {
+	std::srand(std::time(nullptr));
 }
 
 auto

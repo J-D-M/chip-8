@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <shared_mutex>
 #include <vector>
 
@@ -22,6 +23,6 @@ class gfx
 	size_t width;
 
 	std::vector< std::vector< bool > > buf;
-	mutable std::shared_mutex          mutx;
+	mutable std::shared_mutex mutx;
 };
 }  // namespace chip8

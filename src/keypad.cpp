@@ -5,6 +5,7 @@
 namespace chip8
 {
 const auto keypad::key_set{ std::vector< sf::Keyboard::Key >{
+    sf::Keyboard::X,
     sf::Keyboard::Num1,
     sf::Keyboard::Num2,
     sf::Keyboard::Num3,
@@ -12,9 +13,8 @@ const auto keypad::key_set{ std::vector< sf::Keyboard::Key >{
     sf::Keyboard::W,
     sf::Keyboard::E,
     sf::Keyboard::A,
+    sf::Keyboard::S,
     sf::Keyboard::D,
-    sf::Keyboard::F,
-    sf::Keyboard::X,
     sf::Keyboard::Z,
     sf::Keyboard::C,
     sf::Keyboard::Num4,

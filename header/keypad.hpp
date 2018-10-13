@@ -21,7 +21,7 @@ class keypad
 	const static std::vector< sf::Keyboard::Key > key_set;
 
        private:
-	std::vector< bool >       state;
+	std::vector< bool > state;
 	mutable std::shared_mutex mutx;
 };
 }  // namespace chip8

@@ -1,4 +1,5 @@
 #include "../header/emulator.hpp"
+#define NDEBUG 1
 
 namespace chip8
 {
@@ -27,10 +28,10 @@ emulator::cycle() -> void
 	auto bad_opt{ bool{ false } };
 
 #ifndef NDEBUG
-	puts("-----------------------------------------------------------\n");
+	puts("-----------------------------------------------------------");
 	std::printf(
 	    "OP: %#06x\t PC: %#06x\n"
-	    "I : %#06x\t SP: %#06x\t TOP: %#06x \n",
+	    "I : %#06x\t SP: %#06x\t TOP: %#06x\n",
 	    opt,
 	    pc,
 	    i_register,
@@ -52,8 +53,8 @@ emulator::cycle() -> void
 			gfx_buf.clear();
 			break;
 		case 0x00ee:  // return
-			pc = stack[sp];
 			--sp;
+			pc   = stack[sp];
 			halt = true;
 			break;
 		default:
@@ -61,15 +62,15 @@ emulator::cycle() -> void
 			break;
 		}  // 0x0
 		break;
-	case 0x1:  // jump to addr
+	case 0x1:  // jmp to addr
 		pc   = opt & 0xfff;
 		halt = true;
 		break;
 	case 0x2:  // call addr
-		++sp;
 		stack[sp] = pc + 2;
-		pc        = opt & 0xfff;
-		halt      = true;
+		++sp;
+		pc   = opt & 0xfff;
+		halt = true;
 		break;
 	case 0x3:  // jmpe
 		pc += (v_x == (opt & 0xff)) ? 2 : 0;
@@ -142,7 +143,7 @@ emulator::cycle() -> void
 		v_x = static_cast< uint8_t >(std::rand() % 256) & (opt & 0xff);
 		break;
 	case 0xd:  // draw
-		for (size_t i{ 0 }; i <= (opt & 0xf); i++) {
+		for (size_t i{ 0 }; i < (opt & 0xf); i++) {
 			if (gfx_buf.draw_ln(
 			        v_x, v_y + i, memory[i_register + i])) {
 				v[0xf] = 1;
@@ -186,7 +187,6 @@ emulator::cycle() -> void
 			i_register += v_x;
 			break;
 		case 0x29:  // mov sprite location
-			std::printf("%#04x\n\n", v_x);
 			i_register = (v_x * 5);
 			break;
 		case 0x33:  // dump deci digits of v_x
@@ -195,12 +195,12 @@ emulator::cycle() -> void
 			memory[i_register + 2] = v_x % 10;
 			break;
 		case 0x55:  // dump registers into mem
-			for (size_t i{ 0 }; i <= x_index; i++) {
+			for (size_t i{ 0 }; i < x_index; i++) {
 				memory[i_register + i] = v[i];
 			}
 			break;
 		case 0x65:  // dump mem into registers
-			for (size_t i{ 0 }; i <= x_index; i++) {
+			for (size_t i{ 0 }; i < x_index; i++) {
 				v[i] = memory[i_register + i];
 			}
 			break;
@@ -214,10 +214,8 @@ emulator::cycle() -> void
 		break;
 	}
 
-#ifndef NDEBUG
 	if (bad_opt)
 		std::printf("Unknown opcode: %#06x\n", opt);
-#endif
 
 	s_timer -= s_timer > 0 ? 1 : 0;
 	d_timer -= d_timer > 0 ? 1 : 0;

@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <functional>
+#include <shared_mutex>
 #include <thread>
 
 #include "../header/emulator.hpp"
@@ -84,11 +85,21 @@ auto
 emu_loop(shared_flag &quit, chip8::emulator &emu) -> void
 {
 	using namespace std::chrono_literals;
+	const auto sleep_time{ 16ms };
+
 	while (!quit) {
+		auto t1{ std::chrono::high_resolution_clock::now() };
+
 		emu.cycle();
-		std::this_thread::sleep_for(16ms);
+
+		auto t2{ std::chrono::high_resolution_clock::now() };
+		auto dif{ t2 - t1 };
+
+		if (dif < sleep_time)
+			std::this_thread::sleep_for(sleep_time - dif);
 	}
 }
+
 auto
 main(int argc, char **argv) -> int
 {
@@ -107,17 +118,20 @@ main(int argc, char **argv) -> int
 	auto quit{ shared_flag{ false } };
 	auto win{ sf::RenderWindow(sf::VideoMode(width * scale, height * scale),
 		                   "chip-8") };
+	win.setVerticalSyncEnabled(true);
+	win.setFramerateLimit(60);
+
 	auto event{ sf::Event{} };
 
 	auto emu_t{ std::thread(emu_loop, std::ref(quit), std::ref(emu)) };
 
 	// main loop
 
-	while (!quit) {
+	while (win.isOpen()) {
 		while (win.pollEvent(event)) {
 			if (event.type == sf::Event::Closed) {
-				quit = true;
 				win.close();
+				quit = true;
 			}
 		}
 
@@ -126,11 +140,9 @@ main(int argc, char **argv) -> int
 			continue;
 		}
 
+		update_keys(k_pad);
 		win.clear();
 		draw_screen(gfx_buf.get_buf(), win);
 		win.display();
-		update_keys(k_pad);
-
-		std::this_thread::sleep_for(8ms);
 	}
 }

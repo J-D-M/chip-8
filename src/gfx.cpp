@@ -17,9 +17,9 @@ gfx::draw_ln(size_t x, size_t y, uint8_t num) -> bool
 
 	for (size_t i{ 0 }; i < 8; i++) {
 		size_t j = (x + i) % width;
-		bool   b = (num >> (7 - i)) & 1;
+		bool b   = (num >> (7 - i)) & 1;
 
-		if (buf[y][j] & b)
+		if (buf[y][j] && b)
 			ret = true;
 
 		buf[y][j] = b ^ buf[y][j];
