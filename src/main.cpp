@@ -1,16 +1,43 @@
 #include <SFML/Graphics.hpp>
-#include <algorithm>
-#include <cassert>
+#include <SFML/System.hpp>
+#include <SFML/Window.hpp>
 #include <chrono>
-#include <iostream>
+#include <cstdlib>
+#include <functional>
 #include <thread>
-#include <vector>
 
-#include "./chip8.hpp"
+#include "../header/emulator.hpp"
 
 constexpr unsigned scale{ 10 };
 constexpr unsigned width{ 64 };
 constexpr unsigned height{ 32 };
+
+class shared_flag
+{
+       private:
+	mutable std::shared_mutex mutx;
+
+	bool flag;
+
+       public:
+	shared_flag(bool f) : flag{ f }
+	{
+	}
+
+	operator bool() const
+	{
+		auto lock{ std::shared_lock< std::shared_mutex >(mutx) };
+		return flag;
+	}
+
+	auto
+	operator=(bool x) -> bool
+	{
+		auto lock{ std::unique_lock< std::shared_mutex >(mutx) };
+		flag = x;
+		return flag;
+	}
+};
 
 class pixel : public sf::RectangleShape
 {
@@ -22,67 +49,88 @@ class pixel : public sf::RectangleShape
 };
 
 auto
-draw_screen(std::vector< std::vector< bool > > grid, sf::RenderWindow &win)
+draw_screen(std::vector< std::vector< bool > > gfx, sf::RenderWindow &win)
     -> void
 {
 	auto pix{ pixel(scale) };
+
 	auto draw_cell = [&](auto y, auto x) {
-		if (grid[y][x]) {
+		if (gfx[y][x]) {
 			pix.setPosition(x * scale, y * scale);
 			win.draw(pix);
 		}
 	};
 
-	for (size_t y{ 0 }; y < std::size(grid); y++) {
-		for (size_t x{ 0 }; x < std::size(grid[0]); x++) {
+	for (size_t y{ 0 }; y < std::size(gfx); y++) {
+		for (size_t x{ 0 }; x < std::size(gfx[0]); x++) {
 			draw_cell(y, x);
 		}
 	}
 }
 
-// std::vector< std::vector< bool > > dumy(32, std::vector< bool >(64));
+auto
+update_keys(chip8::keypad &pad) -> void
+{
+	for (size_t i{ 0 }; i < std::size(pad.key_set); i++) {
+		if (sf::Keyboard::isKeyPressed(pad.key_set[i])) {
+			pad.press(i);
+		} else {
+			pad.release(i);
+		}
+	}
+}
 
+auto
+emu_loop(shared_flag &quit, chip8::emulator &emu) -> void
+{
+	using namespace std::chrono_literals;
+	while (!quit) {
+		emu.cycle();
+		std::this_thread::sleep_for(16ms);
+	}
+}
 auto
 main(int argc, char **argv) -> int
 {
 	using namespace chip8;
-	using namespace std::literals::chrono_literals;
-	//	auto lel = false;
-	//	for (auto &row : dumy) {
-	//		for (size_t i{ 0 }; i < dumy[0].size(); i++) {
-	//			row[i] = lel;
-	//			lel ^= 1;
-	//		}
-	//	}
-	if (argc < 2) {
-		std::cout << "No file path\n";
+	using namespace std::chrono_literals;
+
+	auto gfx_buf{ gfx{} };
+	auto k_pad{ keypad{} };
+	auto emu{ emulator(gfx_buf, k_pad) };
+
+	if (argc < 2 || !emu.load(argv[1])) {
+		puts("Invalid file path");
+		return 1;
 	}
 
+	auto quit{ shared_flag{ false } };
 	auto win{ sf::RenderWindow(sf::VideoMode(width * scale, height * scale),
 		                   "chip-8") };
-	win.setFramerateLimit(60);
 	auto event{ sf::Event{} };
 
-	auto emu{ emulator{} };
+	auto emu_t{ std::thread(emu_loop, std::ref(quit), std::ref(emu)) };
 
-	if (!emu.load(argv[1])) {
-		std::cout << "Failed to load game\n";
-		return 0;
-	}
+	// main loop
 
-	while (win.isOpen()) {
+	while (!quit) {
 		while (win.pollEvent(event)) {
-			if (event.type == sf::Event::Closed)
+			if (event.type == sf::Event::Closed) {
+				quit = true;
 				win.close();
+			}
 		}
 
-		emu.cycle();
+		if (quit) {
+			emu_t.join();
+			continue;
+		}
+
 		win.clear();
-
-		// draw_screen(dumy, win);
-		draw_screen(emu.get_gfx(), win);
-
+		draw_screen(gfx_buf.get_buf(), win);
 		win.display();
-//		std::this_thread::sleep_for(1ms);
+		update_keys(k_pad);
+
+		std::this_thread::sleep_for(8ms);
 	}
 }

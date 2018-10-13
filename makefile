@@ -1,5 +1,5 @@
 CC       = clang++
-CFLAGS   = -Wall -Wextra -pedantic-errors -std=c++17 -O2
+CFLAGS   = -pthread -Wall -Wextra -pedantic-errors -std=c++17
 LFLAGS   = -lsfml-system -lsfml-window -lsfml-graphics
 
 SRCDIR   = ./src
